@@ -15,17 +15,22 @@ struct ContentView: View {
         GeometryReader { geometry in
             VStack {
                 Text("Tic tac toe").font(.title)
-                Text("Mode: \(viewModel.gameMode.rawValue)").font(.title2)
                 Text("Turn: \(viewModel.currentPlayer.rawValue)").font(.title3)
+                HStack {
+                    Text("Player\(viewModel.gameMode == .PVP ? " 1" : "") points: \(viewModel.playerScore)")
+                    Spacer()
+                    Text("\(viewModel.gameMode == .PVP ? "Player 2" : "Computer") points: \(viewModel.opponentScore)")
+                }
                 Spacer()
                 LazyVGrid(columns: viewModel.columns, spacing: 5) {
                     ForEach(0..<9){ i in
-                        ZStack{
+                        ZStack {
                             GameSquareView(proxy: geometry)
                             
-                            PlayerIndicatorView(systemImageName: viewModel.moves[i]?.indicator ?? "")
+                            PlayerIndicatorView(systemImageName: viewModel.moves[i]?.indicator ?? "",
+                                                won: viewModel.wonPattern.contains(i))
                         }
-                        .onTapGesture{
+                        .onTapGesture {
                             viewModel.processPlayerMove(for: i)
                         }
                     }
@@ -42,6 +47,8 @@ struct ContentView: View {
         }
         HStack {
             GameModeButtonView(mode: .PVE, action: viewModel.changeMode)
+            Spacer()
+            Text("Mode: \(viewModel.gameMode.rawValue)").font(.title2)
             Spacer()
             GameModeButtonView(mode: .PVP, action: viewModel.changeMode)
         }.padding(25)

@@ -9,16 +9,22 @@ import SwiftUI
 
 struct GameModel {
     
-    func processPVEPlayerMove(for position: Int,
-                              moves: inout [Move?],
-                              alertItem: inout AlertItem?,
-                              isGameboardDisabled: inout Bool,
-                              currentPlayer: inout Player) {
+    private let winPatterns: Set<Set<Int>> = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
+    private(set) var playerScore = 0
+    private(set) var opponentScore = 0
+    private(set) var wonPattern: Set<Int> = []
+    
+    mutating func processPVEPlayerMove(for position: Int,
+                                       moves: inout [Move?],
+                                       alertItem: inout AlertItem?,
+                                       isGameboardDisabled: inout Bool,
+                                       currentPlayer: inout Player) {
         if isSquareOccupied(in: moves, forIndex: position) {return}
         moves[position] = Move(player: .human, boardIndex: position)
         
         if checkWinCondition(for: .human, in: moves) {
             alertItem = AlertContext.humanWin
+            playerScore += 1
             return
         }
         
@@ -31,10 +37,10 @@ struct GameModel {
         currentPlayer = .computer
     }
     
-    func processComputerMove(moves: inout [Move?],
-                             alertItem: inout AlertItem?,
-                             isGameboardDisabled: inout Bool,
-                             currentPlayer: inout Player) {
+    mutating func processComputerMove(moves: inout [Move?],
+                                      alertItem: inout AlertItem?,
+                                      isGameboardDisabled: inout Bool,
+                                      currentPlayer: inout Player) {
         if currentPlayer == .computer {
             let computerPosition = determineComputerMovePosition(in: moves)
             moves[computerPosition] = Move(player: .computer, boardIndex: computerPosition)
@@ -43,6 +49,7 @@ struct GameModel {
             
             if checkWinCondition(for: .computer, in: moves){
                 alertItem = AlertContext.computerWin
+                opponentScore += 1
                 return
             }
             
@@ -53,15 +60,22 @@ struct GameModel {
         }
     }
     
-    func processPVPPlayerMove(for position: Int,
-                              moves: inout [Move?],
-                              alertItem: inout AlertItem?,
-                              currentPlayer: inout Player){
+    mutating func processPVPPlayerMove(for position: Int,
+                                       moves: inout [Move?],
+                                       alertItem: inout AlertItem?,
+                                       currentPlayer: inout Player) {
         if isSquareOccupied(in: moves, forIndex: position) {return}
         moves[position] = Move(player: currentPlayer, boardIndex: position)
         
         if checkWinCondition(for: currentPlayer, in: moves){
-            alertItem = currentPlayer == .human ? AlertContext.human1Win : AlertContext.human2Win
+            if currentPlayer == .human {
+                alertItem = AlertContext.human1Win
+                playerScore += 1
+            } else {
+                alertItem = AlertContext.human2Win
+                opponentScore += 1
+            }
+            
             return
         }
         
@@ -82,12 +96,8 @@ struct GameModel {
     // If AI can't win, then block
     // If AI can't block, then take middle square
     // If AI can't take middle square, take random available square
-    
     func determineComputerMovePosition(in moves: [Move?]) -> Int{
-        
         // If AI can win, then win
-        let winPatterns: Set<Set<Int>> = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
-        
         let computerMoves = moves.compactMap {$0}.filter{$0.player == .computer}
         let computerPositions = Set(computerMoves.map {$0.boardIndex})
         
@@ -127,13 +137,12 @@ struct GameModel {
         return movePosition
     }
     
-    func checkWinCondition(for player: Player, in moves: [Move?]) -> Bool {
-        let winPatterns: Set<Set<Int>> = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]
-        
+    mutating func checkWinCondition(for player: Player, in moves: [Move?]) -> Bool {
         let playerMoves = moves.compactMap {$0}.filter{$0.player == player}
         let playerPositions = Set(playerMoves.map {$0.boardIndex})
         
         for pattern in winPatterns where pattern.isSubset(of: playerPositions) {
+            wonPattern = pattern
             return true
         }
         
@@ -142,5 +151,14 @@ struct GameModel {
     
     func checkForDraw(in moves: [Move?]) -> Bool {
         return moves.compactMap {$0}.count == 9
+    }
+    
+    mutating func resetPoints() {
+        playerScore = 0
+        opponentScore = 0
+    }
+    
+    mutating func resetWonPattern() {
+        wonPattern = []
     }
 }

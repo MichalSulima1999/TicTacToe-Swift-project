@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct GameModeButtonView: View {
+    
     let mode: GameMode
     let action: (GameMode) -> Void
     

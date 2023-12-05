@@ -17,7 +17,19 @@ final class GameViewModel: ObservableObject {
     @Published var alertItem: AlertItem?
     @Published var gameMode: GameMode = .PVE
     @Published var currentPlayer: Player = .human
-    private var model: GameModel = GameModel()
+    @Published private var model: GameModel = GameModel()
+    
+    var playerScore: Int {
+        model.playerScore
+    }
+    
+    var opponentScore: Int {
+        model.opponentScore
+    }
+    
+    var wonPattern: Set<Int> {
+        model.wonPattern
+    }
     
     func processPlayerMove(for position: Int) {
         if gameMode == .PVE {
@@ -26,7 +38,7 @@ final class GameViewModel: ObservableObject {
                                        alertItem: &alertItem,
                                        isGameboardDisabled: &isGameboardDisabled,
                                        currentPlayer: &currentPlayer)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [self] in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [self] in
                 model.processComputerMove(moves: &moves,
                                           alertItem: &alertItem,
                                           isGameboardDisabled: &isGameboardDisabled,
@@ -39,11 +51,14 @@ final class GameViewModel: ObservableObject {
     
     func changeMode(mode: GameMode) {
         gameMode = mode
+        model.resetPoints()
         resetGame()
     }
     
     func resetGame() {
         moves = Array(repeating: nil, count: 9)
         currentPlayer = .human
+        model.resetWonPattern()
+        isGameboardDisabled = false
     }
 }

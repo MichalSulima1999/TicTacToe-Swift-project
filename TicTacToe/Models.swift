@@ -13,9 +13,9 @@ enum GameMode: String {
 }
 
 enum Player: String {
-    case human = "Player",
-         human2 = "Player 2",
-         computer = "CPU"
+    case human = "Player 🙋",
+         human2 = "Player 2 🙋‍♂️",
+         computer = "CPU 🤖"
 }
 
 struct Move {
